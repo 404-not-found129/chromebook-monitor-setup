@@ -1,4 +1,9 @@
 #!/bin/bash
+# Single-instance guard: two copies of this loop each spawn their own fullscreen
+# viewer, and they fight over focus/stacking - which looks like screen flicker.
+exec 9>/tmp/vnc-fullscreen.lock
+flock -n 9 || exit 0
+
 # Keep the display awake: X resets these each session.
 xset s off
 xset s noblank

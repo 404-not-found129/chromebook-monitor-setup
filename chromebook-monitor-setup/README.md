@@ -73,6 +73,21 @@ first failed attempt. The PC boots slower than the Chromebook, so this happens
 every single time. Fix: poll the port with `/dev/tcp` before launching, plus
 `-AlertOnFatalError=0 -ReconnectOnError=0`.
 
+**Workspaces belong to monitors.** A plain `workspace 2` bind switches to
+whichever monitor *owns* workspace 2 and drags focus there — so once the
+Chromebook owned a low-numbered workspace, every `SUPER+N` jumped to it and the
+main monitor became unswitchable. Fixed with per-monitor ranges (1–10 main,
+11–20 Chromebook) via `workspace_rule`, plus `hypr-workspace.sh`, which picks
+the range from the cursor's current monitor. The rules matter on their own:
+without them Hyprland creates each new workspace on the focused monitor, so the
+ranges drift.
+
+**Two viewer loops look like screen flicker.** If a stale `vnc-fullscreen.sh`
+survives (easy to cause when restarting things by hand), both loops spawn their
+own fullscreen viewer and the two windows fight over focus and stacking. The
+symptom reads as a display/encoder problem, but it's just duplicate processes —
+hence the `flock` guard at the top of the script.
+
 **The headless output gets renamed** on every recreate — `HEADLESS-1`, then
 `HEADLESS-2`, and so on within a session (it resets on reboot). Anything holding
 the old name silently breaks, so `setup-chromebook-monitor.sh` discovers the name
@@ -103,11 +118,13 @@ Chromebooks boot themselves when AC appears.
 install.sh                        both halves, idempotent
 pc/
   setup-chromebook-monitor.sh     creates the headless output, starts wayvnc + waynergy
+  hypr-workspace.sh               per-monitor workspace switching (cursor-aware)
   wayvnc.config                   listen on all interfaces, port 5900
   chromebook-shutdown.service     powers the Chromebook off with the PC
 chromebook/
   vnc-fullscreen.sh               fullscreen view-only viewer with reconnect loop
   deskflow-server.sh              shares the trackpad
   deskflow-server.conf            screen layout + protocol = barrier
+  fastfetch-config.jsonc          compact layout for the 1366x768 panel
   *.desktop                       XDG autostart entries
 ```

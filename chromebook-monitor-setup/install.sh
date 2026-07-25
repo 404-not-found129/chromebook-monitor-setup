@@ -64,10 +64,11 @@ install_pc() {
     install -m 644 "$REPO_DIR/pc/wayvnc.config" "$HOME/.config/wayvnc/config"
     ok "~/.config/wayvnc/config"
 
-    say "Installing the monitor setup script"
+    say "Installing scripts"
     mkdir -p "$HOME/.local/bin"
     install -m 755 "$REPO_DIR/pc/setup-chromebook-monitor.sh" "$HOME/.local/bin/"
-    ok "~/.local/bin/setup-chromebook-monitor.sh"
+    install -m 755 "$REPO_DIR/pc/hypr-workspace.sh" "$HOME/.local/bin/"
+    ok "~/.local/bin/{setup-chromebook-monitor,hypr-workspace}.sh"
 
     say "Patching Hyprland config"
     local hypr_lua="$HOME/.config/hypr/hyprland.lua"
@@ -95,6 +96,22 @@ install_pc() {
 -- Coordinates must stay >= 0: negative origins break composited capture.
 hl.monitor({ output = "$MAIN_OUTPUT", mode = "highrr", position = "$MAIN_POS", scale = 1 })
 hl.monitor({ output = "HEADLESS-1", mode = "$HEADLESS_MODE", position = "$HEADLESS_POS", scale = 1 })
+
+-- Per-monitor workspace ranges: 1-10 on the main monitor, 11-20 on the
+-- Chromebook. Without these, Hyprland creates each new workspace on whichever
+-- monitor is focused, so the ranges drift between screens.
+for i = 1, 10 do
+    hl.workspace_rule({ workspace = tostring(i),      monitor = "$MAIN_OUTPUT" })
+    hl.workspace_rule({ workspace = tostring(i + 10), monitor = "HEADLESS-1" })
+end
+
+-- Route SUPER+N to the screen the cursor is on, instead of jumping to whichever
+-- monitor owns that workspace.
+for i = 1, 10 do
+    local key = i % 10
+    hl.bind("SUPER + " .. key,         hl.dsp.exec_cmd("$HOME/.local/bin/hypr-workspace.sh " .. i))
+    hl.bind("SUPER + SHIFT + " .. key, hl.dsp.exec_cmd("$HOME/.local/bin/hypr-workspace.sh " .. i .. " move"))
+end
 
 hl.on("hyprland.start", function()
     hl.exec_cmd("sleep 2 && ~/.local/bin/setup-chromebook-monitor.sh")
@@ -196,6 +213,13 @@ install_chromebook() {
     mkdir -p "$HOME/.config/deskflow"
     install -m 644 "$REPO_DIR/chromebook/deskflow-server.conf" "$HOME/.config/deskflow/"
     ok "~/.config/deskflow/deskflow-server.conf"
+
+    if command -v fastfetch >/dev/null; then
+        say "Installing fastfetch config (sized for the small panel)"
+        mkdir -p "$HOME/.config/fastfetch"
+        install -m 644 "$REPO_DIR/chromebook/fastfetch-config.jsonc" "$HOME/.config/fastfetch/config.jsonc"
+        ok "~/.config/fastfetch/config.jsonc"
+    fi
 
     say "Installing autostart entries"
     mkdir -p "$HOME/.config/autostart"
