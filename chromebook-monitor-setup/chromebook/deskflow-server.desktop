@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Deskflow Server (share trackpad with PC)
+Exec=/home/linux/.local/bin/deskflow-server.sh
+X-GNOME-Autostart-enabled=true
+Terminal=false

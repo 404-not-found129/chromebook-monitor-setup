@@ -1,0 +1,16 @@
+[Unit]
+Description=Power off the Chromebook second monitor when this PC shuts down
+After=network.target NetworkManager.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=jackson
+ExecStart=/usr/bin/true
+# Runs at shutdown while the network is still up. Skips reboots: only a real
+# poweroff should take the Chromebook down with it.
+ExecStop=-/bin/sh -c 'systemctl list-jobs | grep -q reboot.target || /usr/bin/ssh -o BatchMode=yes -o ConnectTimeout=3 linux@192.168.86.132 sudo /usr/sbin/poweroff'
+TimeoutStopSec=8
+
+[Install]
+WantedBy=multi-user.target

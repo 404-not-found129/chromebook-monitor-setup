@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Chromebook Extra Monitor
+Comment=Auto-connect to the PC's second monitor over VNC
+Exec=/home/linux/.local/bin/vnc-fullscreen.sh
+X-GNOME-Autostart-enabled=true
+Terminal=false
