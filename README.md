@@ -16,7 +16,7 @@ screens**.
 ## Install
 
 ```bash
-git clone <this repo> && cd chromebook-monitor-setup
+git clone https://github.com/404-not-found129/chromebook-monitor-setup.git && cd chromebook-monitor-setup
 ```
 
 Edit the settings block at the top of `install.sh` (IP addresses, your monitor's
